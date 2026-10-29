@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster | Modern Productivity</title>
+    <meta name="description" content="A modern, responsive to-do list application for daily, weekly, and monthly productivity tracking.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i data-lucide="check-square" class="logo-icon"></i>
+                    <h2>TaskMaster</h2>
+                </div>
+                <button class="mobile-close-btn" id="mobile-close-btn" aria-label="Close sidebar">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul id="nav-menu">
+                    <li class="nav-item active" data-view="dashboard">
+                        <i data-lucide="layout-dashboard"></i>
+                        <span>Dashboard</span>
+                    </li>
+                    <li class="nav-item" data-view="daily">
+                        <i data-lucide="calendar-days"></i>
+                        <span>Daily Tasks</span>
+                    </li>
+                    <li class="nav-item" data-view="weekly">
+                        <i data-lucide="calendar-range"></i>
+                        <span>Weekly Planner</span>
+                    </li>
+                    <li class="nav-item" data-view="monthly">
+                        <i data-lucide="bar-chart-3"></i>
+                        <span>Monthly Report</span>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="mobile-toggle-btn" id="mobile-toggle-btn" aria-label="Open sidebar">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <div class="search-bar">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="global-search" placeholder="Search tasks...">
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark mode">
+                        <i data-lucide="moon" id="theme-icon-moon"></i>
+                        <i data-lucide="sun" id="theme-icon-sun" class="hidden"></i>
+                    </button>
+                    <div class="user-profile">
+                        <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="User Profile">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dynamic Views Container -->
+            <div id="view-container" class="view-container">
+                <!-- Dashboard View -->
+                <section id="view-dashboard" class="view-section active">
+                    <div class="view-header">
+                        <h1>Dashboard</h1>
+                        <p>Welcome back, here's your progress.</p>
+                    </div>
+                    
+                    <div class="dashboard-stats grid-4">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-blue"><i data-lucide="list-todo"></i></div>
+                            <div class="stat-info">
+                                <h3>Total Tasks</h3>
+                                <p id="dash-total-tasks">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-green"><i data-lucide="check-circle-2"></i></div>
+                            <div class="stat-info">
+                                <h3>Completed</h3>
+                                <p id="dash-completed-tasks">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-orange"><i data-lucide="clock"></i></div>
+                            <div class="stat-info">
+                                <h3>Pending</h3>
+                                <p id="dash-pending-tasks">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-purple"><i data-lucide="activity"></i></div>
+                            <div class="stat-info">
+                                <h3>Completion Rate</h3>
+                                <p id="dash-completion-rate">0%</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-content grid-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Today's Priority</h2>
+                                <button class="btn-text" onclick="app.navigateTo('daily')">View All</button>
+                            </div>
+                            <div class="card-body">
+                                <ul id="dash-today-tasks" class="task-list minimal">
+                                    <!-- Populated by JS -->
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Weekly Progress</h2>
+                            </div>
+                            <div class="card-body center-content">
+                                <div class="progress-circle-container">
+                                    <svg viewBox="0 0 36 36" class="circular-chart">
+                                      <path class="circle-bg"
+                                        d="M18 2.0845
+                                          a 15.9155 15.9155 0 0 1 0 31.831
+                                          a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      />
+                                      <path class="circle" id="dash-weekly-circle"
+                                        stroke-dasharray="0, 100"
+                                        d="M18 2.0845
+                                          a 15.9155 15.9155 0 0 1 0 31.831
+                                          a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      />
+                                      <text x="18" y="20.35" class="percentage" id="dash-weekly-percentage">0%</text>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Daily Tasks View -->
+                <section id="view-daily" class="view-section hidden">
+                    <div class="view-header flex-between">
+                        <div>
+                            <h1>Daily Tasks</h1>
+                            <p id="daily-date-display">Today</p>
+                        </div>
+                        <button class="btn btn-primary" id="btn-add-task">
+                            <i data-lucide="plus"></i> Add Task
+                        </button>
+                    </div>
+
+                    <div class="filters-bar">
+                        <div class="filter-group">
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="pending">Pending</button>
+                            <button class="filter-btn" data-filter="completed">Completed</button>
+                        </div>
+                        <div class="sort-group">
+                            <select id="sort-daily" class="select-input">
+                                <option value="date-desc">Date (Newest)</option>
+                                <option value="date-asc">Date (Oldest)</option>
+                                <option value="priority-desc">Priority (High-Low)</option>
+                                <option value="priority-asc">Priority (Low-High)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div id="daily-empty-state" class="empty-state hidden">
+                                <i data-lucide="clipboard-list"></i>
+                                <h3>No tasks found</h3>
+                                <p>Get started by adding a new task for today.</p>
+                            </div>
+                            <ul id="daily-task-list" class="task-list">
+                                <!-- Populated by JS -->
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Weekly Planner View -->
+                <section id="view-weekly" class="view-section hidden">
+                    <div class="view-header">
+                        <h1>Weekly Planner</h1>
+                        <p>Organize your tasks across the week.</p>
+                    </div>
+                    
+                    <div class="weekly-grid" id="weekly-grid">
+                        <!-- Days populated by JS -->
+                    </div>
+                </section>
+
+                <!-- Monthly Report View -->
+                <section id="view-monthly" class="view-section hidden">
+                    <div class="view-header flex-between">
+                        <div>
+                            <h1>Monthly Report</h1>
+                            <p id="monthly-month-display">Current Month</p>
+                        </div>
+                        <button class="btn btn-outline" id="btn-export-pdf">
+                            <i data-lucide="download"></i> Export PDF
+                        </button>
+                    </div>
+
+                    <div id="pdf-export-content">
+                        <div class="dashboard-stats grid-4">
+                            <!-- Populated similar to dashboard -->
+                            <div class="stat-card">
+                                <div class="stat-info">
+                                    <h3>Total Tasks</h3>
+                                    <p id="month-total-tasks">0</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-info">
+                                    <h3>Completed</h3>
+                                    <p id="month-completed-tasks">0</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-info">
+                                    <h3>Pending</h3>
+                                    <p id="month-pending-tasks">0</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-info">
+                                    <h3>Completion Rate</h3>
+                                    <p id="month-completion-rate">0%</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h2>Task Completion Overview</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="monthlyChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Task Modal -->
+    <div class="modal-overlay hidden" id="task-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title">Add New Task</h2>
+                <button class="close-modal-btn" id="close-task-modal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="task-form" class="modal-body">
+                <input type="hidden" id="task-id">
+                <div class="form-group">
+                    <label for="task-title">Title</label>
+                    <input type="text" id="task-title" required placeholder="What needs to be done?">
+                </div>
+                <div class="form-group">
+                    <label for="task-desc">Description (Optional)</label>
+                    <textarea id="task-desc" rows="3" placeholder="Add some details..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="task-date">Due Date</label>
+                        <input type="date" id="task-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-priority">Priority</label>
+                        <select id="task-priority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="cancel-task-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay hidden" id="delete-modal">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h2>Delete Task?</h2>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this task? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="cancel-delete-btn">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- App Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/store.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
